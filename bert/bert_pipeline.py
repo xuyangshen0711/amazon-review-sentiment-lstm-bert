@@ -29,7 +29,7 @@ and download the dataset.
 # --- CELL 1: Setup and Downloads (Colab Only) ---
 # In Colab, run these commands first:
 # !pip install torch transformers numpy pandas scikit-learn matplotlib
-# !wget https://jmcauley.ucsd.edu/data/amazon_v2/categoryFilesSmall/Software_5.json.gz
+# !wget --no-check-certificate https://jmcauley.ucsd.edu/data/amazon_v2/categoryFilesSmall/Software_5.json.gz
 
 # --- CELL 2: Imports ---
 import os

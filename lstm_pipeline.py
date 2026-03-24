@@ -2,8 +2,33 @@
 CS6120 Final Project - LSTM Pipeline
 Author: Xuyang Shen
 
-Instructions for Google Colab:
-You can copy each section delineated by "--- CELL ---" into a separate Colab cell.
+==============================================================
+INSTALLATION
+==============================================================
+Install required dependencies with:
+    pip install torch numpy pandas scikit-learn matplotlib nltk
+
+Then download NLTK stopwords (run once):
+    python -c "import nltk; nltk.download('stopwords')"
+
+==============================================================
+HOW TO RUN (Local)
+==============================================================
+1. Place Software_5.json.gz in the same directory as this script.
+2. Unzip GloVe embeddings into a subfolder named glove_data/:
+       unzip glove.6B.zip -d glove_data
+3. Run the full pipeline:
+       python lstm_pipeline.py
+   Output: best_lstm_model.pt, loss_curves.png
+   (Results are printed to stdout; redirect to save: python lstm_pipeline.py > result.txt)
+
+==============================================================
+HOW TO RUN (Google Colab)
+==============================================================
+You can copy each section delineated by "--- CELL ---" into a
+separate Colab cell. Run Cell 1 first to download the dataset
+and GloVe embeddings.
+==============================================================
 """
 
 # --- CELL 1: Setup and Downloads ---
@@ -26,10 +51,15 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix
 import matplotlib.pyplot as plt
 from collections import Counter
+import nltk
+nltk.download('stopwords', quiet=True)
+from nltk.corpus import stopwords
 
 # Setting random seeds for reproducibility
 torch.manual_seed(42)
 np.random.seed(42)
+
+STOP_WORDS = set(stopwords.words('english'))
 
 # --- CELL 3: Data Loading and Preprocessing ---
 def load_amazon_data(file_path, max_reviews=100000):
@@ -59,8 +89,8 @@ df['label'] = df['rating'].apply(lambda x: 1 if x > 3.0 else 0)
 def clean_text(text):
     text = str(text).lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
-    # Simple whitespace tokenization is sufficient for basic GloVe lookup
     tokens = text.split()
+    tokens = [t for t in tokens if t not in STOP_WORDS]
     return tokens
 
 df['tokens'] = df['text'].apply(clean_text)
@@ -268,7 +298,7 @@ plt.xlabel('Epochs')
 plt.ylabel('Loss')
 plt.legend()
 plt.savefig('loss_curves.png')
-plt.show()
+plt.close()
 
 # Run Evaluation on Test Set
 test_preds, test_targets = [], []

@@ -1,0 +1,36 @@
+============================================================
+COMPARISON TO UNWEIGHTED
+============================================================
+
+NEGATIVE CLASS (minority class — primary improvement target)
+Unweighted Negative Precision:       0.6250
+Improved Weighted Negative Precision: 0.7846
+Precision Improvement: +0.1596  (+25.5% relative)
+
+Unweighted Negative Recall:          0.0225
+Improved Weighted Negative Recall:   0.6892
+Recall Improvement: +0.6667  (unweighted baseline near-degenerate)
+
+POSITIVE CLASS (majority class)
+Unweighted Positive Precision:       0.8050
+Improved Weighted Positive Precision: 0.9255
+Precision Improvement: +0.1205  (+15.0% relative)
+
+Unweighted Positive Recall:          0.9967
+Improved Weighted Positive Recall:   0.9533
+Recall Change: -0.0434  (expected trade-off when boosting minority class)
+
+Unweighted Positive F1:              0.8907
+Improved Weighted Positive F1:       0.9392
+F1 Improvement: +0.0485
+
+OVERALL
+Unweighted Accuracy:  0.8037
+Improved Accuracy:    0.9010
+Accuracy Improvement: +0.0973
+
+REQUIREMENT CHECK (>= 10% improvement in precision/recall)
+Negative Precision: PASS (+15.96pp)
+Negative Recall:    PASS (+66.67pp)
+Positive Precision: PASS (+12.05pp)
+Positive Recall:    NOTE — regressed 4.34pp (precision-recall trade-off)

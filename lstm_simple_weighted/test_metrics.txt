@@ -1,0 +1,21 @@
+============================================================
+TEST METRICS
+============================================================
+Model: LSTM (Simple Weighted Loss)
+Dataset: /Users/barry/Desktop/CS6120/Presentation/Software_5.json.gz
+pos_weight: 0.2469  (= num_neg / num_pos = 1775/7189)
+Accuracy: 0.2114
+Precision: 0.8571
+Recall: 0.0200
+F1-Score: 0.0391
+Negative Precision: 0.1991
+Negative Recall: 0.9865
+Negative F1: 0.3313
+Negative Support: 222
+Positive Precision: 0.8571
+Positive Recall: 0.0200
+Positive F1: 0.0391
+Positive Support: 899
+Confusion Matrix:
+[[219   3]
+ [881  18]]

@@ -1,0 +1,69 @@
+Artifacts will be saved to: /Users/barry/Desktop/lstm_unweighted
+Using dataset: /Users/barry/Desktop/CS6120/Presentation/Software_5.json.gz
+Using GloVe embeddings: /Users/barry/Desktop/CS6120/Presentation/glove_data/glove.6B.300d.txt
+Dataset loaded successfully!
+  Total reviews (after excluding 3-star): 11206
+  Train size: 8964
+  Val size:   1121
+  Test size:  1121
+  Positive ratio: 80.20%
+Vocabulary size: 16199
+Embedding matrix shape: (16199, 300)
+
+DataLoaders created:
+  Train batches: 141
+  Val batches:   18
+  Test batches:  18
+
+Using device: mps
+
+Model: LSTM (Unweighted)
+  Total parameters: 5,957,685
+  Trainable parameters: 1,097,985
+Epoch 1/10 - Train Loss: 0.5078 - Val Loss: 0.4996 - Val Acc: 0.8020
+  -> Validation loss improved. Model saved.
+Epoch 2/10 - Train Loss: 0.5004 - Val Loss: 0.4991 - Val Acc: 0.8020
+  -> Validation loss improved. Model saved.
+Epoch 3/10 - Train Loss: 0.4968 - Val Loss: 0.4994 - Val Acc: 0.8011
+  -> No improvement. Patience: 1/3
+Epoch 4/10 - Train Loss: 0.4848 - Val Loss: 0.4966 - Val Acc: 0.8037
+  -> Validation loss improved. Model saved.
+Epoch 5/10 - Train Loss: 0.4791 - Val Loss: 0.5039 - Val Acc: 0.8029
+  -> No improvement. Patience: 1/3
+Epoch 6/10 - Train Loss: 0.4760 - Val Loss: 0.5041 - Val Acc: 0.8046
+  -> No improvement. Patience: 2/3
+Epoch 7/10 - Train Loss: 0.4715 - Val Loss: 0.5099 - Val Acc: 0.8037
+  -> No improvement. Patience: 3/3
+Early stopping triggered!
+
+Training complete! Total time: 125.7s (2.1 min)
+
+Test Accuracy:  0.8037
+Test Precision: 0.8050
+Test Recall:    0.9967
+Test F1-Score:  0.8907
+
+Per-class metrics:
+  Negative - Precision: 0.6250, Recall: 0.0225, F1: 0.0435, Support: 222
+  Positive - Precision: 0.8050, Recall: 0.9967, F1: 0.8907, Support: 899
+
+Confusion Matrix:
+[[  5 217]
+ [  3 896]]
+Detailed test metrics saved to: /Users/barry/Desktop/lstm_unweighted/test_metrics.txt
+
+Loss curves saved to: /Users/barry/Desktop/lstm_unweighted/loss_curves.png
+Confusion matrix saved to: /Users/barry/Desktop/lstm_unweighted/confusion_matrix.png
+
+============================================================
+MODEL SUMMARY
+============================================================
+  Model:             LSTM (Unweighted)
+  Total Parameters:  5,957,685
+  Model Size:        22.7 MB
+  Training Time:     125.7s (2.1 min)
+  Avg Inference Time (batch of 64): 5.4 ms
+  Test Accuracy:     0.8037
+  Test F1-Score:     0.8907
+  Neg Class Recall:  0.0225
+Model summary saved to: /Users/barry/Desktop/lstm_unweighted/model_summary.txt

@@ -1,0 +1,11 @@
+============================================================
+MODEL SUMMARY
+============================================================
+  Model:             LSTM (Unweighted)
+  Total Parameters:  5,957,685
+  Model Size:        22.7 MB
+  Training Time:     125.7s (2.1 min)
+  Avg Inference Time (batch of 64): 5.4 ms
+  Test Accuracy:     0.8037
+  Test F1-Score:     0.8907
+  Neg Class Recall:  0.0225

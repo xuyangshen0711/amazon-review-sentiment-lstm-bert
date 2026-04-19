@@ -1,0 +1,13 @@
+============================================================
+MODEL SUMMARY
+============================================================
+  Model:             LSTM (Simple Weighted Loss)
+  Total Parameters:  5,957,685
+  Model Size:        22.7 MB
+  Training Time:     49.3s (0.8 min)
+  Avg Inference Time (batch of 64): 5.3 ms
+  pos_weight:        0.2469
+  Test Accuracy:     0.2114
+  Test F1-Score:     0.0391
+  Neg Precision:     0.1991
+  Neg Recall:        0.9865

@@ -1,0 +1,100 @@
+Artifacts will be saved to: /Users/barry/Desktop/lstm_weighted
+Using dataset: /Users/barry/Desktop/CS6120/Presentation/Software_5.json.gz
+Using GloVe embeddings: /Users/barry/Desktop/CS6120/Presentation/glove_data/glove.6B.300d.txt
+Dataset loaded successfully!
+  Total reviews (after excluding 3-star): 11206
+  Train size: 8964
+  Val size:   1121
+  Test size:  1121
+  Positive ratio: 80.20%
+
+Training distribution:
+  Negative samples in train: 1775
+  Positive samples in train: 7189
+  Negative class weight: 2.5251
+  Positive class weight: 0.6235
+Vocabulary size: 16199
+Embedding matrix shape: (16199, 300)
+
+DataLoaders created:
+  Train batches: 141
+  Val batches:   18
+  Test batches:  18
+
+Using device: mps
+
+Model: BiLSTM with Balanced Sampling + Weighted BCE
+  Total parameters: 5,695,541
+  Trainable parameters: 835,841
+Epoch 1/10 - Train Loss: 0.6094 - Val Loss: 0.4641 - Val Macro F1: 0.7993 - Val Neg Recall: 0.6441 - Threshold: 0.125
+  -> Validation macro F1 improved. Model saved.
+Epoch 2/10 - Train Loss: 0.4136 - Val Loss: 0.4880 - Val Macro F1: 0.8053 - Val Neg Recall: 0.7748 - Threshold: 0.125
+  -> Validation macro F1 improved. Model saved.
+Epoch 3/10 - Train Loss: 0.3630 - Val Loss: 0.3649 - Val Macro F1: 0.8195 - Val Neg Recall: 0.6441 - Threshold: 0.100
+  -> Validation macro F1 improved. Model saved.
+Epoch 4/10 - Train Loss: 0.2981 - Val Loss: 0.3744 - Val Macro F1: 0.8276 - Val Neg Recall: 0.7252 - Threshold: 0.100
+  -> Validation macro F1 improved. Model saved.
+Epoch 5/10 - Train Loss: 0.2504 - Val Loss: 0.3632 - Val Macro F1: 0.8427 - Val Neg Recall: 0.7477 - Threshold: 0.175
+  -> Validation macro F1 improved. Model saved.
+Epoch 6/10 - Train Loss: 0.1911 - Val Loss: 0.4000 - Val Macro F1: 0.8365 - Val Neg Recall: 0.7613 - Threshold: 0.125
+  -> No improvement. Patience: 1/4
+Epoch 7/10 - Train Loss: 0.1543 - Val Loss: 0.4505 - Val Macro F1: 0.8265 - Val Neg Recall: 0.6757 - Threshold: 0.200
+  -> No improvement. Patience: 2/4
+Epoch 8/10 - Train Loss: 0.1607 - Val Loss: 0.4192 - Val Macro F1: 0.8600 - Val Neg Recall: 0.7568 - Threshold: 0.100
+  -> Validation macro F1 improved. Model saved.
+Epoch 9/10 - Train Loss: 0.1250 - Val Loss: 0.4210 - Val Macro F1: 0.8483 - Val Neg Recall: 0.7568 - Threshold: 0.100
+  -> No improvement. Patience: 1/4
+Epoch 10/10 - Train Loss: 0.0875 - Val Loss: 0.4884 - Val Macro F1: 0.8467 - Val Neg Recall: 0.8243 - Threshold: 0.200
+  -> No improvement. Patience: 2/4
+
+Training complete! Total time: 127.5s (2.1 min)
+
+Best threshold selected from validation: 0.100
+Best validation macro F1: 0.8600
+
+Test Accuracy:  0.9010
+Test Precision: 0.9255
+Test Recall:    0.9533
+Test F1-Score:  0.9392
+
+Per-class metrics:
+  Negative - Precision: 0.7846, Recall: 0.6892, F1: 0.7338, Support: 222
+  Positive - Precision: 0.9255, Recall: 0.9533, F1: 0.9392, Support: 899
+
+Confusion Matrix:
+[[153  69]
+ [ 42 857]]
+Detailed test metrics saved to: /Users/barry/Desktop/lstm_weighted/test_metrics.txt
+
+Loss curves saved to: /Users/barry/Desktop/lstm_weighted/loss_curves.png
+Confusion matrix saved to: /Users/barry/Desktop/lstm_weighted/confusion_matrix.png
+
+============================================================
+MODEL SUMMARY
+============================================================
+  Model:             BiLSTM (Weighted / Improved)
+  Total Parameters:  5,695,541
+  Model Size:        21.7 MB
+  Training Time:     127.5s (2.1 min)
+  Avg Inference Time (batch of 64): 14.8 ms
+  Best Threshold:    0.100
+  Test Accuracy:     0.9010
+  Test F1-Score:     0.9392
+  Macro F1:          0.8365
+  Neg Precision:     0.7846
+  Neg Recall:        0.6892
+Model summary saved to: /Users/barry/Desktop/lstm_weighted/model_summary.txt
+
+============================================================
+COMPARISON TO UNWEIGHTED
+============================================================
+Unweighted Negative Precision: 0.6250
+Improved Weighted Negative Precision: 0.7846
+Precision Improvement: +0.1596
+Unweighted Negative Recall: 0.0225
+Improved Weighted Negative Recall: 0.6892
+Recall Improvement: +0.6667
+Unweighted Positive F1: 0.8907
+Improved Weighted Positive F1: 0.9392
+F1 Difference: +0.0485
+Comparison report saved to: /Users/barry/Desktop/lstm_weighted/comparison_to_unweighted.txt

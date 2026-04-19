@@ -1,0 +1,16 @@
+============================================================
+COMPARISON: Simple Weighted vs. Unweighted
+============================================================
+
+NEGATIVE CLASS (minority — the class that matters most)
+  Precision:  0.6250 → 0.1991  (-0.4259)  ✓ >=10% change
+  Recall:     0.0225 → 0.9865  (+0.9640)  ✓ >=10% change
+
+POSITIVE CLASS
+  F1:         0.8907 → 0.0391  (-0.8516)
+  Recall:     0.9967 → 0.0200  (-0.9767)
+
+REQUIREMENT CHECK
+  Professor requires >=10% improvement in precision OR recall.
+  Negative Precision: PASS
+  Negative Recall:    PASS

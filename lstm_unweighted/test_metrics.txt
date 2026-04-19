@@ -1,0 +1,20 @@
+============================================================
+TEST METRICS
+============================================================
+Model: LSTM (Unweighted)
+Dataset: /Users/barry/Desktop/CS6120/Presentation/Software_5.json.gz
+Accuracy: 0.8037
+Precision: 0.8050
+Recall: 0.9967
+F1-Score: 0.8907
+Negative Precision: 0.6250
+Negative Recall: 0.0225
+Negative F1: 0.0435
+Negative Support: 222
+Positive Precision: 0.8050
+Positive Recall: 0.9967
+Positive F1: 0.8907
+Positive Support: 899
+Confusion Matrix:
+[[  5 217]
+ [  3 896]]

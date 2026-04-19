@@ -82,6 +82,7 @@ SEARCH_ROOTS = (
 
 
 def resolve_resource(name, expect_dir=False):
+    """Search multiple candidate directories for a required data file or folder."""
     for root in SEARCH_ROOTS:
         candidate = root / name
         if expect_dir and candidate.is_dir():
@@ -169,11 +170,15 @@ print(f"  Positive ratio: {df['label'].mean():.2%}")
 
 # --- CELL 4: Vocabulary and GloVe Embeddings ---
 def build_vocab(sentences, min_freq=2):
+    """Build word-to-index vocabulary from training tokens.
+
+    Words below min_freq are excluded to reduce noise.
+    Index 0 = <pad> (padding), index 1 = <unk> (unknown words).
+    """
     counter = Counter()
     for tokens in sentences:
         counter.update(tokens)
-    
-    # 0 = <pad>, 1 = <unk>
+
     vocab = {"<pad>": 0, "<unk>": 1}
     idx = 2
     for word, freq in counter.items():
@@ -186,12 +191,14 @@ vocab = build_vocab(train_df['tokens'])
 print(f"Vocabulary size: {len(vocab)}")
 
 def load_glove_embeddings(glove_path, expected_dim=300):
+    """Parse the GloVe text file into a word-to-vector dictionary."""
     embeddings_dict = {}
     with open(glove_path, 'r', encoding='utf-8') as f:
         for line in f:
             values = line.split()
             word = values[0]
             vector = np.asarray(values[1:], "float32")
+            # Skip malformed lines that don't match the expected embedding dimension
             if len(vector) == expected_dim:
                 embeddings_dict[word] = vector
     return embeddings_dict
@@ -200,11 +207,13 @@ def load_glove_embeddings(glove_path, expected_dim=300):
 glove_dict = load_glove_embeddings(GLOVE_PATH)
 
 def create_embedding_matrix(vocab, embeddings_dict, embedding_dim=300):
+    """Map vocabulary words to GloVe vectors; OOV words get random normal init."""
     matrix = np.zeros((len(vocab), embedding_dim))
     for word, i in vocab.items():
         if word in embeddings_dict:
             matrix[i] = embeddings_dict[word]
         else:
+            # Random init for words not in GloVe; pad/unk stay as zero vectors
             if word not in ["<pad>", "<unk>"]:
                 matrix[i] = np.random.normal(scale=0.6, size=(embedding_dim,))
     return matrix
@@ -216,6 +225,7 @@ print(f"Embedding matrix shape: {embedding_matrix.shape}")
 MAX_SEQ_LENGTH = 256
 
 def tokens_to_indices(tokens, vocab, max_len):
+    """Convert a token list to a fixed-length index sequence; pad short, truncate long."""
     indices = [vocab.get(w, vocab["<unk>"]) for w in tokens]
     if len(indices) < max_len:
         indices += [vocab["<pad>"]] * (max_len - len(indices))
@@ -224,13 +234,16 @@ def tokens_to_indices(tokens, vocab, max_len):
     return indices
 
 class AmazonReviewDataset(Dataset):
+    """PyTorch Dataset wrapping tokenized Amazon reviews and binary sentiment labels."""
+
     def __init__(self, df, vocab, max_len):
         self.labels = df['label'].values
+        # Pre-convert token lists to index sequences at construction time for speed
         self.sequences = df['tokens'].apply(lambda t: tokens_to_indices(t, vocab, max_len)).tolist()
-        
+
     def __len__(self):
         return len(self.labels)
-        
+
     def __getitem__(self, idx):
         return torch.tensor(self.sequences[idx], dtype=torch.long), torch.tensor(self.labels[idx], dtype=torch.float)
 
@@ -381,7 +394,7 @@ print(f"\nTraining complete! Total time: {total_training_time:.1f}s ({total_trai
 
 
 # --- CELL 8: Final Evaluation on Test Set ---
-model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+model.load_state_dict(torch.load(MODEL_PATH, map_location=device, weights_only=True))
 model.eval()
 
 # Run Evaluation on Test Set

@@ -77,6 +77,7 @@ SEARCH_ROOTS = (
 
 
 def resolve_resource(name, expect_dir=False):
+    """Search multiple candidate directories for a required data file or folder."""
     for root in SEARCH_ROOTS:
         candidate = root / name
         if expect_dir and candidate.is_dir():
@@ -113,6 +114,7 @@ print(f"Using GloVe embeddings:     {GLOVE_PATH}")
 # ── SECTION 1: DATA ──────────────────────────────────────────
 
 def load_amazon_data(file_path, max_reviews=100000):
+    """Load reviews from a gzipped JSON-lines file, keeping only text and rating fields."""
     data = []
     with gzip.open(file_path, 'rt', encoding='utf-8') as f:
         for idx, line in enumerate(f):
@@ -129,6 +131,7 @@ df = df[df['rating'] != 3.0]
 df['label'] = df['rating'].apply(lambda x: 1 if x > 3.0 else 0)
 
 def clean_text(text):
+    """Lowercase, remove punctuation, and filter stopwords from a review string."""
     text = str(text).lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
     return [t for t in text.split() if t not in STOP_WORDS]
@@ -161,9 +164,11 @@ print(f"  → positive class loss is scaled by {pos_weight_value:.4f}; "
 # ── SECTION 2: VOCAB & EMBEDDINGS ────────────────────────────
 
 def build_vocab(sentences, min_freq=2):
+    """Build word-to-index vocabulary; words below min_freq are excluded to reduce noise."""
     counter = Counter()
     for tokens in sentences:
         counter.update(tokens)
+    # Reserve index 0 for padding and index 1 for unknown tokens
     vocab = {"<pad>": 0, "<unk>": 1}
     idx = 2
     for word, freq in counter.items():
@@ -207,6 +212,7 @@ MAX_SEQ_LENGTH = 256
 BATCH_SIZE     = 64
 
 def tokens_to_indices(tokens, vocab, max_len):
+    """Convert a token list to a fixed-length index sequence; pad short, truncate long."""
     indices = [vocab.get(w, vocab["<unk>"]) for w in tokens]
     if len(indices) < max_len:
         indices += [vocab["<pad>"]] * (max_len - len(indices))
@@ -215,8 +221,11 @@ def tokens_to_indices(tokens, vocab, max_len):
     return indices
 
 class AmazonReviewDataset(Dataset):
+    """PyTorch Dataset wrapping tokenized Amazon reviews and binary sentiment labels."""
+
     def __init__(self, df, vocab, max_len):
         self.labels    = df['label'].values
+        # Pre-convert all token lists to index sequences at construction time
         self.sequences = df['tokens'].apply(
             lambda t: tokens_to_indices(t, vocab, max_len)).tolist()
 
@@ -368,7 +377,7 @@ print(f"\nTraining complete! {total_training_time:.1f}s ({total_training_time/60
 
 # ── SECTION 6: TEST EVALUATION ───────────────────────────────
 
-model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+model.load_state_dict(torch.load(MODEL_PATH, map_location=device, weights_only=True))
 model.eval()
 
 test_preds, test_targets = [], []

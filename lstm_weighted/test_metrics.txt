@@ -1,0 +1,25 @@
+============================================================
+TEST METRICS
+============================================================
+Model: BiLSTM (Weighted / Improved)
+Dataset: /Users/barry/Desktop/CS6120/Presentation/Software_5.json.gz
+Best Threshold: 0.100
+Best Validation Macro F1: 0.8600
+Negative Class Weight: 2.5251
+Positive Class Weight: 0.6235
+Accuracy: 0.9010
+Precision: 0.9255
+Recall: 0.9533
+F1-Score: 0.9392
+Macro F1: 0.8365
+Negative Precision: 0.7846
+Negative Recall: 0.6892
+Negative F1: 0.7338
+Negative Support: 222
+Positive Precision: 0.9255
+Positive Recall: 0.9533
+Positive F1: 0.9392
+Positive Support: 899
+Confusion Matrix:
+[[153  69]
+ [ 42 857]]

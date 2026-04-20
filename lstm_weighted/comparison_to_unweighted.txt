@@ -1,0 +1,12 @@
+============================================================
+COMPARISON TO UNWEIGHTED
+============================================================
+Unweighted Negative Precision: 0.6250
+Improved Weighted Negative Precision: 0.7846
+Precision Improvement: +0.1596
+Unweighted Negative Recall: 0.0225
+Improved Weighted Negative Recall: 0.6892
+Recall Improvement: +0.6667
+Unweighted Positive F1: 0.8907
+Improved Weighted Positive F1: 0.9392
+F1 Difference: +0.0485

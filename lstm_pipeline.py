@@ -274,8 +274,15 @@ for epoch in range(EPOCHS):
     if avg_val_loss < best_val_loss:
         best_val_loss = avg_val_loss
         patience_counter = 0
-        # Save the best model state
-        torch.save(model.state_dict(), 'best_lstm_model.pt')
+        # Save the best model state (including vocab for standalone demo use)
+        torch.save({
+            'model_state_dict': model.state_dict(),
+            'vocab': vocab,
+            'hidden_dim': HIDDEN_DIM,
+            'embedding_dim': 300,
+            'num_layers': 2,
+            'dropout_prob': 0.5,
+        }, 'best_lstm_model.pt')
         print(f"  -> Validation loss improved. Model saved.")
     else:
         patience_counter += 1
@@ -286,7 +293,8 @@ for epoch in range(EPOCHS):
 
 # --- CELL 8: Evaluation & Visualization ---
 # Load the best model weights
-model.load_state_dict(torch.load('best_lstm_model.pt'))
+checkpoint = torch.load('best_lstm_model.pt', weights_only=False)
+model.load_state_dict(checkpoint['model_state_dict'])
 model.eval()
 
 # Plot Training vs Validation Loss Curves

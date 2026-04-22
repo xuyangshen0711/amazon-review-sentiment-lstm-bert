@@ -67,21 +67,41 @@ python3 -c "import nltk; nltk.download('stopwords')"
 
 Download the trained weight files from your Google Colab session to your local project folders:
 
-1. **BiLSTM Weights**: Download `model.pt` and place it inside the `bilstm_weighted/` folder.
-2. **BERT Weights**: Download `best_bert_model.pt` and place it in the project root directory.
+1. **BiLSTM V3 Weights**: Download `model.pt` and place it inside the `lstm_weighted/` folder.
+2. **BiLSTM V2 Weights**: Download `model.pt` and place it inside the `lstm_simple_weighted/` folder.
+3. **BiLSTM V1 Weights**: Download `best_lstm_model.pt` and place it in the project root directory.
+4. **BERT Weights**: Download `best_bert_model.pt` and place it in the project root directory.
 
 ### 4.3 Execute Demo Scripts
 
-**Step 1: Run BiLSTM Demo (Best Model)**
+**Step 1: Run BiLSTM V3 Demo (Best Model)**
 
-Navigate to the `bilstm_weighted` folder and launch the demo:
+Navigate to the `lstm_weighted` folder and launch the demo:
 
 ```
-cd bilstm_weighted
+cd lstm_weighted
 python3 demo.py
 ```
 
-**Step 2: Run BERT Demo**
+**Step 2: Run BiLSTM V1 Demo (Unweighted Baseline)**
+
+Navigate to the `lstm_unweighted` folder and launch the demo:
+
+```
+cd lstm_unweighted
+python3 demo.py
+```
+
+**Step 3: Run BiLSTM V2 Demo (Simple Weighted)**
+
+Navigate to the `lstm_simple_weighted` folder and launch the demo:
+
+```
+cd lstm_simple_weighted
+python3 demo.py
+```
+
+**Step 4: Run BERT Demo**
 
 From the project root directory, launch the BERT demo:
 
@@ -89,6 +109,6 @@ From the project root directory, launch the BERT demo:
 python3 demo.py
 ```
 
-**Step 3: Play with the demo**
+**Step 5: Play with the demo**
 
 Once the script starts running, you will first see five sample reviews with predictions. You can then type your own review in the interactive mode and get a Positive / Negative prediction. Type `quit` to exit.

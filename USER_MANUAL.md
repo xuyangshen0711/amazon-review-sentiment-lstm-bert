@@ -67,23 +67,23 @@ python3 -c "import nltk; nltk.download('stopwords')"
 
 Download the trained weight files from your Google Colab session to your local project folders:
 
-1. **BiLSTM V3 Weights**: Download `model.pt` and place it inside the `lstm_weighted/` folder.
+1. **BiLSTM V3 Weights**: Download `model.pt` and place it inside the `bilstm_weighted/` folder.
 2. **BiLSTM V2 Weights**: Download `model.pt` and place it inside the `lstm_simple_weighted/` folder.
-3. **BiLSTM V1 Weights**: Download `best_lstm_model.pt` and place it in the project root directory.
+3. **LSTM V1 Weights**: Download `best_lstm_model.pt` and place it in the project root directory.
 4. **BERT Weights**: Download `best_bert_model.pt` and place it in the project root directory.
 
 ### 4.3 Execute Demo Scripts
 
 **Step 1: Run BiLSTM V3 Demo (Best Model)**
 
-Navigate to the `lstm_weighted` folder and launch the demo:
+Navigate to the `bilstm_weighted` folder and launch the demo:
 
 ```
-cd lstm_weighted
+cd bilstm_weighted
 python3 demo.py
 ```
 
-**Step 2: Run BiLSTM V1 Demo (Unweighted Baseline)**
+**Step 2: Run LSTM V1 Demo (Unweighted Baseline)**
 
 Navigate to the `lstm_unweighted` folder and launch the demo:
 

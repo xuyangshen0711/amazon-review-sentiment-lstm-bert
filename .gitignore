@@ -2,6 +2,7 @@
 glove_data/
 *.zip
 *.gz
+!Software_5.json.gz
 *.csv
 
 # Python and OS

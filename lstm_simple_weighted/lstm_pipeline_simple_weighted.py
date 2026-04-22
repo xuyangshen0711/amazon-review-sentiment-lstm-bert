@@ -223,8 +223,7 @@ def main():
     val_ds   = AmazonReviewDataset(val_df,   vocab, MAX_SEQ_LENGTH)
     test_ds  = AmazonReviewDataset(test_df,  vocab, MAX_SEQ_LENGTH)
 
-    # Standard DataLoader — no sampler (key difference from V3)
-    train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
+    train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)  # no sampler (unlike V3)
     val_loader   = DataLoader(val_ds,   batch_size=BATCH_SIZE, shuffle=False)
     test_loader  = DataLoader(test_ds,  batch_size=BATCH_SIZE, shuffle=False)
 
@@ -240,7 +239,6 @@ def main():
         len(vocab), EMBEDDING_DIM, HIDDEN_DIM, embedding_matrix, NUM_LAYERS, DROPOUT_PROB
     ).to(device)
 
-    # Class-weighted loss: penalise false negatives
     neg_count  = (train_df["label"] == 0).sum()
     pos_count  = (train_df["label"] == 1).sum()
     pos_weight = torch.tensor([neg_count / pos_count], dtype=torch.float32).to(device)

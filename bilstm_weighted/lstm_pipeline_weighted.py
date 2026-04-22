@@ -1,40 +1,12 @@
 """
-CS6120 Final Project - LSTM Pipeline (Weighted / Improved)
+CS6120 Final Project - BiLSTM Pipeline (Weighted)
 Author: Xuyang Shen
 
-==============================================================
-INSTALLATION
-==============================================================
-Install required dependencies with:
-    pip install torch numpy pandas scikit-learn matplotlib nltk
-
-Then download NLTK stopwords (run once):
-    python3 -c "import nltk; nltk.download('stopwords')"
-
-==============================================================
-HOW TO RUN (Local)
-==============================================================
-1. Keep Software_5.json.gz and glove_data/ either in this folder
-   or in /Users/barry/Desktop/CS6120/Presentation/.
-2. Run the full pipeline from this folder:
-       python3 lstm_pipeline_weighted.py
-3. All outputs are saved into this folder automatically:
-       model.pt
-       loss_curves.png
-       confusion_matrix.png
-       test_metrics.txt
-       model_summary.txt
-       comparison_to_unweighted.txt
-
-==============================================================
-METHOD OVERVIEW
-==============================================================
-This weighted version improves minority-class performance with:
-1. Bidirectional LSTM + max pooling
-2. Balanced sampling during training
-3. Class-weighted BCEWithLogitsLoss
-4. Validation-based threshold tuning
-==============================================================
+Weighted BiLSTM with:
+- Bidirectional LSTM + max pooling
+- Balanced sampling (WeightedRandomSampler)
+- Class-weighted BCEWithLogitsLoss
+- Validation-based threshold tuning
 """
 
 import os
@@ -63,16 +35,13 @@ from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
 nltk.download("stopwords", quiet=True)
 
-# Fix random seeds to ensure reproducible results across runs
 torch.manual_seed(42)
 np.random.seed(42)
 
 STOP_WORDS = set(stopwords.words("english"))
-# Save all output files to the same directory as this script
 OUTPUT_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Search these directories in order when looking for data files
 SEARCH_ROOTS = (
     OUTPUT_DIR,
     OUTPUT_DIR.parent,
@@ -83,32 +52,27 @@ SEARCH_ROOTS = (
 
 
 def resolve_resource(name, expect_dir=False):
-    """Search multiple directories for a required data file or folder."""
     for root in SEARCH_ROOTS:
         candidate = root / name
         if expect_dir and candidate.is_dir():
             return candidate
         if not expect_dir and candidate.is_file():
             return candidate
-
     checked_paths = "\n".join(f"  - {root / name}" for root in SEARCH_ROOTS)
     kind = "directory" if expect_dir else "file"
     raise FileNotFoundError(f"Could not find required {kind} '{name}'. Checked:\n{checked_paths}")
 
 
 def save_text_report(path, lines):
-    """Write a list of strings to a text file and return the joined content."""
     text = "\n".join(lines) + "\n"
     path.write_text(text, encoding="utf-8")
     return text
 
 
 def parse_metrics_report(path):
-    """Read a key: value metrics file into a dictionary for baseline comparison."""
     metrics = {}
     if not path.exists():
         return metrics
-
     for line in path.read_text(encoding="utf-8").splitlines():
         if ":" not in line:
             continue
@@ -119,7 +83,6 @@ def parse_metrics_report(path):
 
 DATA_PATH = resolve_resource("Software_5.json.gz")
 GLOVE_PATH = resolve_resource("glove_data", expect_dir=True) / "glove.6B.300d.txt"
-# Load unweighted baseline metrics for comparison if available
 BASELINE_METRICS_PATH = OUTPUT_DIR.parent / "lstm_unweighted" / "test_metrics.txt"
 
 MODEL_PATH = OUTPUT_DIR / "model.pt"
@@ -131,7 +94,6 @@ COMPARISON_PATH = OUTPUT_DIR / "comparison_to_unweighted.txt"
 
 
 def load_amazon_data(file_path, max_reviews=100000):
-    """Load reviews from a gzipped JSON-lines file, keeping only text and rating fields."""
     data = []
     with gzip.open(file_path, "rt", encoding="utf-8") as file_obj:
         for idx, line in enumerate(file_obj):
@@ -147,7 +109,6 @@ def load_amazon_data(file_path, max_reviews=100000):
 
 
 def clean_text(text):
-    """Lowercase, remove punctuation, and filter out stopwords from a review string."""
     text = str(text).lower()
     text = text.translate(str.maketrans("", "", string.punctuation))
     tokens = text.split()
@@ -155,15 +116,10 @@ def clean_text(text):
 
 
 def build_vocab(sentences, min_freq=2):
-    """Build a word-to-index vocabulary from tokenized sentences.
-
-    Words appearing fewer than min_freq times are excluded to reduce noise.
-    Index 0 is reserved for padding; index 1 for unknown tokens.
-    """
+    """Build word-to-index vocab; index 0=pad, 1=unk, words below min_freq excluded."""
     counter = Counter()
     for tokens in sentences:
         counter.update(tokens)
-
     vocab = {"<pad>": 0, "<unk>": 1}
     idx = 2
     for word, freq in counter.items():
@@ -174,26 +130,19 @@ def build_vocab(sentences, min_freq=2):
 
 
 def load_glove_embeddings(glove_path, expected_dim=300):
-    """Parse the GloVe text file into a word-to-vector dictionary."""
     embeddings_dict = {}
     with open(glove_path, "r", encoding="utf-8") as file_obj:
         for line in file_obj:
             values = line.split()
             word = values[0]
             vector = np.asarray(values[1:], dtype="float32")
-            # Skip malformed lines that don't match the expected dimension
             if len(vector) == expected_dim:
                 embeddings_dict[word] = vector
     return embeddings_dict
 
 
 def create_embedding_matrix(vocab, embeddings_dict, embedding_dim=300):
-    """Build the embedding weight matrix for the model's Embedding layer.
-
-    Words found in GloVe use their pretrained vectors.
-    Out-of-vocabulary words are initialized with random normal noise (sigma=0.6).
-    Pad and unk tokens remain as zero vectors.
-    """
+    """Initialize embedding matrix from GloVe; OOV words get random noise (sigma=0.6)."""
     matrix = np.zeros((len(vocab), embedding_dim), dtype=np.float32)
     for word, idx in vocab.items():
         if word in embeddings_dict:
@@ -203,30 +152,25 @@ def create_embedding_matrix(vocab, embeddings_dict, embedding_dim=300):
     return matrix
 
 
-# Maximum token length per review; sequences are truncated or padded to this length
 MAX_SEQ_LENGTH = 256
 BATCH_SIZE = 64
 
 
 def tokens_to_indices(tokens, vocab, max_len):
-    """Convert a token list to a fixed-length index sequence with padding or truncation."""
     indices = [vocab.get(word, vocab["<unk>"]) for word in tokens]
     if len(indices) < max_len:
-        # Pad short sequences with the pad token index
         indices += [vocab["<pad>"]] * (max_len - len(indices))
     else:
-        # Truncate sequences that exceed the maximum length
         indices = indices[:max_len]
     return indices
 
 
 class AmazonReviewDataset(Dataset):
-    """PyTorch Dataset wrapping tokenized Amazon reviews and their binary sentiment labels."""
-
     def __init__(self, df, vocab, max_len):
         self.labels = df["label"].astype(np.float32).values
-        # Pre-convert all token lists to index sequences at construction time
-        self.sequences = df["tokens"].apply(lambda tokens: tokens_to_indices(tokens, vocab, max_len)).tolist()
+        self.sequences = df["tokens"].apply(
+            lambda tokens: tokens_to_indices(tokens, vocab, max_len)
+        ).tolist()
 
     def __len__(self):
         return len(self.labels)
@@ -239,18 +183,13 @@ class AmazonReviewDataset(Dataset):
 
 
 class BiLSTMWeightedSentiment(nn.Module):
-    """Bidirectional LSTM sentiment classifier with max pooling over time steps.
-
-    Architecture:
-        Embedding (frozen GloVe) -> BiLSTM -> Max Pool -> Dropout -> Linear
-    """
+    """BiLSTM + max pooling: Embedding (frozen GloVe) -> BiLSTM -> MaxPool -> Dropout -> Linear."""
 
     def __init__(self, vocab_size, embedding_dim, hidden_dim, embedding_matrix, num_layers=2, dropout_prob=0.5):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
         self.embedding.weight = nn.Parameter(torch.tensor(embedding_matrix, dtype=torch.float32))
-        # Freeze pretrained GloVe weights to prevent overfitting on small dataset
-        self.embedding.weight.requires_grad = False
+        self.embedding.weight.requires_grad = False  # freeze GloVe weights
 
         self.lstm = nn.LSTM(
             embedding_dim,
@@ -258,38 +197,30 @@ class BiLSTMWeightedSentiment(nn.Module):
             num_layers=num_layers,
             batch_first=True,
             dropout=dropout_prob if num_layers > 1 else 0,
-            bidirectional=True,  # Forward + backward pass doubles the output size
+            bidirectional=True,
         )
         self.dropout = nn.Dropout(dropout_prob)
-        # BiLSTM output is hidden_dim * 2 because of forward and backward directions
         self.fc = nn.Linear(hidden_dim * 2, 1)
 
     def forward(self, x):
         embedded = self.embedding(x)
         outputs, _ = self.lstm(embedded)
-        # Max pooling over all time steps captures the most prominent feature per dimension
         pooled, _ = outputs.max(dim=1)
         pooled = self.dropout(pooled)
         return self.fc(pooled).squeeze(-1)
 
 
 def calculate_metrics(labels, positive_predictions):
-    """Compute per-class and aggregate metrics for binary classification.
-
-    Uses sklearn's average=None to get separate precision/recall/f1 for each class,
-    avoiding the fragile label-flipping approach.
-    """
+    """Return per-class and aggregate metrics for binary classification."""
     prec, rec, f1, _ = precision_recall_fscore_support(
         labels,
         positive_predictions,
         average=None,
-        labels=[0, 1],  # Index 0 = negative class, index 1 = positive class
+        labels=[0, 1],
         zero_division=0,
     )
-
     confusion = confusion_matrix(labels, positive_predictions)
     accuracy = accuracy_score(labels, positive_predictions)
-    # Macro F1 weights both classes equally, making it robust to class imbalance
     macro_f1 = (f1[0] + f1[1]) / 2
 
     return {
@@ -306,21 +237,18 @@ def calculate_metrics(labels, positive_predictions):
 
 
 def collect_probabilities(model, loader, device):
-    """Run inference over a DataLoader and return predicted probabilities and true labels."""
     probabilities = []
     labels = []
     with torch.no_grad():
         for inputs, batch_labels in loader:
             inputs = inputs.to(device)
             logits = model(inputs)
-            # Convert raw logits to probabilities with sigmoid
             probabilities.extend(torch.sigmoid(logits).cpu().numpy())
             labels.extend(batch_labels.numpy())
     return np.array(probabilities), np.array(labels).astype(int)
 
 
 def evaluate_loss(model, loader, criterion, device, negative_weight, positive_weight):
-    """Compute weighted validation loss, consistent with the training loss formulation."""
     total_loss = 0.0
     with torch.no_grad():
         for inputs, labels in loader:
@@ -328,26 +256,19 @@ def evaluate_loss(model, loader, criterion, device, negative_weight, positive_we
             labels = labels.to(device)
             logits = model(inputs)
             batch_loss = criterion(logits, labels)
-            # Apply per-sample class weights so val loss matches training dynamics
+            # per-sample weighting keeps val loss consistent with training
             batch_weights = torch.where(labels < 0.5, negative_weight, positive_weight)
             total_loss += (batch_loss * batch_weights).mean().item()
     return total_loss / max(1, len(loader))
 
 
 def search_best_threshold(probabilities, labels):
-    """Grid search over 33 thresholds (0.10 to 0.90) to maximize macro F1.
-
-    When two thresholds tie on macro F1, prefer the one with higher negative recall
-    to avoid the majority-class collapse seen in the unweighted baseline.
-    """
+    """Grid search over 33 thresholds to maximize macro F1; ties broken by negative recall."""
     best_result = None
     for threshold in np.linspace(0.10, 0.90, 33):
         positive_predictions = (probabilities >= threshold).astype(int)
         metrics = calculate_metrics(labels, positive_predictions)
-        result = {
-            "threshold": float(threshold),
-            "metrics": metrics,
-        }
+        result = {"threshold": float(threshold), "metrics": metrics}
 
         if best_result is None:
             best_result = result
@@ -358,7 +279,7 @@ def search_best_threshold(probabilities, labels):
         if current > best:
             best_result = result
         elif np.isclose(current, best):
-            # Tiebreak: prefer the threshold that recalls more negative samples
+            # tiebreak toward higher negative recall to avoid majority-class collapse
             if metrics["negative_recall"] > best_result["metrics"]["negative_recall"]:
                 best_result = result
 
@@ -369,27 +290,16 @@ print(f"Artifacts will be saved to: {OUTPUT_DIR}")
 print(f"Using dataset: {DATA_PATH}")
 print(f"Using GloVe embeddings: {GLOVE_PATH}")
 
-# --- Data Loading & Label Assignment ---
+# --- Data Loading ---
 df = load_amazon_data(DATA_PATH, max_reviews=100000)
-# Remove neutral 3-star reviews; they are ambiguous and hurt binary classification
-df = df[df["rating"] != 3.0]
-# Convert star ratings to binary labels: >3 stars = positive (1), <3 stars = negative (0)
+df = df[df["rating"] != 3.0]  # exclude ambiguous 3-star reviews
 df["label"] = df["rating"].apply(lambda rating: 1 if rating > 3.0 else 0)
 df["tokens"] = df["text"].apply(clean_text)
 
-# Stratified split to preserve class ratio across train / val / test sets
-train_val_df, test_df = train_test_split(
-    df,
-    test_size=0.1,
-    random_state=42,
-    stratify=df["label"],
-)
-# test_size=1/9 gives ~10% of total, resulting in an 80/10/10 split overall
+train_val_df, test_df = train_test_split(df, test_size=0.1, random_state=42, stratify=df["label"])
+# test_size=1/9 gives ~10% of total → 80/10/10 split
 train_df, val_df = train_test_split(
-    train_val_df,
-    test_size=1 / 9,
-    random_state=42,
-    stratify=train_val_df["label"],
+    train_val_df, test_size=1 / 9, random_state=42, stratify=train_val_df["label"]
 )
 
 print("Dataset loaded successfully!")
@@ -399,8 +309,7 @@ print(f"  Val size:   {len(val_df)}")
 print(f"  Test size:  {len(test_df)}")
 print(f"  Positive ratio: {df['label'].mean():.2%}")
 
-# --- Class Weight Computation ---
-# Inverse-frequency weighting: rarer classes receive higher loss weight
+# --- Class Weights ---
 class_counts = np.bincount(train_df["label"].astype(int))
 negative_count = int(class_counts[0])
 positive_count = int(class_counts[1])
@@ -413,7 +322,7 @@ print(f"  Positive samples in train: {positive_count}")
 print(f"  Negative class weight: {negative_weight_value:.4f}")
 print(f"  Positive class weight: {positive_weight_value:.4f}")
 
-# Build vocabulary from training set only to prevent data leakage
+# build vocab from training set only to avoid data leakage
 vocab = build_vocab(train_df["tokens"])
 print(f"Vocabulary size: {len(vocab)}")
 
@@ -426,10 +335,10 @@ val_dataset = AmazonReviewDataset(val_df, vocab, MAX_SEQ_LENGTH)
 test_dataset = AmazonReviewDataset(test_df, vocab, MAX_SEQ_LENGTH)
 
 # --- Balanced Sampler ---
-# Assign each sample a weight inversely proportional to its class frequency.
-# WeightedRandomSampler then draws batches with approximately equal class counts,
-# addressing class imbalance at the data level (complementing the weighted loss).
-sample_weights = np.where(train_df["label"].values == 0, 1.0 / negative_count, 1.0 / positive_count)
+# WeightedRandomSampler draws equal class counts per batch, complementing the weighted loss
+sample_weights = np.where(
+    train_df["label"].values == 0, 1.0 / negative_count, 1.0 / positive_count
+)
 balanced_sampler = WeightedRandomSampler(
     weights=torch.as_tensor(sample_weights, dtype=torch.double),
     num_samples=len(sample_weights),
@@ -449,7 +358,6 @@ HIDDEN_DIM = 128
 NUM_LAYERS = 2
 DROPOUT_PROB = 0.5
 
-# Automatically select the best available hardware accelerator
 if torch.cuda.is_available():
     device = torch.device("cuda")
 elif torch.backends.mps.is_available():
@@ -459,27 +367,25 @@ else:
 
 print(f"\nUsing device: {device}")
 model = BiLSTMWeightedSentiment(
-    len(vocab),
-    300,
-    HIDDEN_DIM,
-    embedding_matrix,
-    num_layers=NUM_LAYERS,
-    dropout_prob=DROPOUT_PROB,
+    len(vocab), 300, HIDDEN_DIM, embedding_matrix,
+    num_layers=NUM_LAYERS, dropout_prob=DROPOUT_PROB,
 ).to(device)
 
 print("\nModel: BiLSTM with Balanced Sampling + Weighted BCE")
 print(f"  Total parameters: {sum(p.numel() for p in model.parameters()):,}")
 print(f"  Trainable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad):,}")
 
-# Only optimize parameters that are not frozen (embedding weights are excluded)
-optimizer = torch.optim.Adam(filter(lambda param: param.requires_grad, model.parameters()), lr=8e-4)
-# reduction="none" returns per-sample losses so we can apply per-class weights manually
+# only optimize non-frozen params (GloVe embeddings excluded)
+optimizer = torch.optim.Adam(
+    filter(lambda param: param.requires_grad, model.parameters()), lr=8e-4
+)
+# reduction="none" so we can apply per-sample class weights manually
 criterion = nn.BCEWithLogitsLoss(reduction="none")
 negative_weight = torch.tensor(negative_weight_value, dtype=torch.float32, device=device)
 positive_weight = torch.tensor(positive_weight_value, dtype=torch.float32, device=device)
 
 EPOCHS = 10
-PATIENCE = 4  # Stop early if val macro F1 does not improve for this many consecutive epochs
+PATIENCE = 4
 
 train_losses = []
 val_losses = []
@@ -503,7 +409,6 @@ for epoch in range(EPOCHS):
         optimizer.zero_grad()
         logits = model(inputs)
         batch_loss = criterion(logits, labels)
-        # Scale each sample's loss by its class weight before averaging
         batch_weights = torch.where(labels < 0.5, negative_weight, positive_weight)
         loss = (batch_loss * batch_weights).mean()
         loss.backward()
@@ -519,7 +424,6 @@ for epoch in range(EPOCHS):
     avg_val_loss = evaluate_loss(model, val_loader, criterion, device, negative_weight, positive_weight)
     val_losses.append(avg_val_loss)
 
-    # Search for the best classification threshold on the validation set each epoch
     val_probabilities, val_labels = collect_probabilities(model, val_loader, device)
     threshold_result = search_best_threshold(val_probabilities, val_labels)
     epoch_threshold = threshold_result["threshold"]
@@ -537,7 +441,6 @@ for epoch in range(EPOCHS):
         f"Threshold: {epoch_threshold:.3f}"
     )
 
-    # Save checkpoint whenever validation macro F1 improves
     if epoch_metrics["macro_f1"] > best_val_macro_f1:
         best_val_macro_f1 = epoch_metrics["macro_f1"]
         best_threshold = epoch_threshold
@@ -567,8 +470,7 @@ for epoch in range(EPOCHS):
 total_training_time = time.time() - training_start_time
 print(f"\nTraining complete! Total time: {total_training_time:.1f}s ({total_training_time / 60:.1f} min)")
 
-# --- Evaluation on Test Set ---
-# Restore the best checkpoint before evaluating on the held-out test set
+# --- Evaluation ---
 checkpoint = torch.load(MODEL_PATH, map_location=device, weights_only=False)
 model.load_state_dict(checkpoint["model_state_dict"])
 best_threshold = float(checkpoint["best_threshold"])
@@ -576,7 +478,6 @@ best_val_macro_f1 = float(checkpoint["best_val_macro_f1"])
 model.eval()
 
 test_probabilities, test_labels = collect_probabilities(model, test_loader, device)
-# Apply the best threshold found on the validation set
 test_positive_predictions = (test_probabilities >= best_threshold).astype(int)
 test_metrics = calculate_metrics(test_labels, test_positive_predictions)
 conf_matrix = test_metrics["confusion_matrix"]
@@ -663,10 +564,7 @@ plt.close()
 print(f"\nLoss curves saved to: {LOSS_CURVES_PATH}")
 
 fig, ax = plt.subplots(figsize=(6, 5))
-disp = ConfusionMatrixDisplay(
-    confusion_matrix=conf_matrix,
-    display_labels=["Negative", "Positive"],
-)
+disp = ConfusionMatrixDisplay(confusion_matrix=conf_matrix, display_labels=["Negative", "Positive"])
 disp.plot(ax=ax, cmap="Blues", values_format="d")
 plt.title("Weighted / Improved BiLSTM - Confusion Matrix")
 plt.tight_layout()
@@ -679,7 +577,7 @@ model_size_mb = sum(param.numel() * param.element_size() for param in model.para
 sample_inputs, _ = next(iter(test_loader))
 sample_inputs = sample_inputs.to(device)
 
-# Warm-up run before timing to avoid first-call overhead
+# warm-up run to avoid first-call overhead
 with torch.no_grad():
     _ = model(sample_inputs)
 

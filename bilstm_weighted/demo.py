@@ -27,7 +27,7 @@ REQUIREMENTS
 ==============================================================
 HOW TO RUN
 ==============================================================
-    cd lstm_weighted
+    cd bilstm_weighted
     python3 demo.py
 
 The script predicts sentiment for the built-in sample reviews

@@ -1,200 +1,94 @@
-# Appendix: User Manual
+# Appendix
 
-## 1 README Section
+## 1. Project Overview
 
-### 1.1 Project Overview
-
-This project implements and compares three LSTM-based sentiment classifiers and one BERT classifier on Amazon Software product reviews. The goal is to classify each review as Positive or Negative. The best-performing model is the **Weighted BiLSTM** (`lstm_weighted/`), which uses a bidirectional LSTM architecture with balanced sampling and class-weighted loss to handle class imbalance.
+This project compares LSTM-based sentiment classifiers and a BERT classifier using Amazon product reviews. The following guide walks you through the complete process of training the models on Google Colab and running interactive demos on your local machine.
 
 ---
 
-### 1.2 Prerequisites
+## 2. Data
 
-**Required:**
+Before starting, ensure you have the following files available for upload:
 
-- **Python:** 3.8 or higher
-- **pip:** Python package manager
-- **Dataset:** `Software_5.json.gz` (Amazon Software reviews)
-- **GloVe Embeddings:** `glove_data/glove.6B.300d.txt` (required for LSTM models only)
-
-**Note:** The BERT pipeline downloads the `bert-base-uncased` tokenizer automatically on first run. No manual download needed.
+- **Dataset**: Software_5.json.gz
+- **Embeddings**: glove_data/glove.6B.300d.txt (Required for LSTM models only)
 
 ---
 
-### 1.3 Instructions
+## 3. Training on Google Colab
 
-#### 1.3.1 Environment Setup
+### 3.1 Training LSTM Models (CPU)
 
-**Step 1: Install Python dependencies**
+1. **Runtime Setup**: Open a new notebook in Google Colab. Go to **Runtime → Change runtime type** and ensure **Hardware accelerator** is set to **None** (CPU).
 
-```bash
-pip install torch torchvision torchaudio
-pip install transformers
-pip install numpy pandas scikit-learn matplotlib nltk
+2. **Upload Files**: Upload the scripts from the `bilstm_weighted/` folder along with the `Software_5.json.gz` dataset and `glove_data/` directory to the Colab environment.
+
+3. **Run Training**: Execute the following commands in a code cell:
+
+```
+!pip install torch numpy pandas scikit-learn matplotlib nltk
+!python3 lstm_pipeline_weighted.py
 ```
 
-**Step 2: Download NLTK stopwords (run once)**
+### 3.2 Training BERT Model (GPU)
 
-```bash
+1. **Runtime Setup**: Open a new notebook. Go to **Runtime → Change runtime type** and select **T4 GPU** (or any available GPU).
+
+2. **Upload Files**: Upload `bert_pipeline.py` and the `Software_5.json.gz` dataset to the Colab root directory.
+
+3. **Run Training**: Execute the following commands in a code cell:
+
+```
+!pip install torch transformers pandas scikit-learn
+!python3 bert_pipeline.py
+```
+
+---
+
+## 4. Running Local Demos
+
+After training is complete on Google Colab, follow these steps to run the interactive demos on your local machine.
+
+### 4.1 Setup Local Environment
+
+Ensure you have Python 3.8+ installed, then install the necessary libraries:
+
+```
+pip install torch transformers numpy pandas scikit-learn matplotlib nltk
+```
+
+Also download NLTK stopwords (run once):
+
+```
 python3 -c "import nltk; nltk.download('stopwords')"
 ```
 
-**Step 3: Prepare data files**
+### 4.2 Sync Trained Weights
 
-Place the following files in the project root (`LSTM/`) or inside any pipeline subfolder — the scripts will find them automatically:
+Download the trained weight files from your Google Colab session to your local project folders:
 
-| File | Description |
-|------|-------------|
-| `Software_5.json.gz` | Amazon Software review dataset |
-| `glove_data/glove.6B.300d.txt` | GloVe 300-dimensional word embeddings |
+1. **BiLSTM Weights**: Download `model.pt` and place it inside the `bilstm_weighted/` folder.
+2. **BERT Weights**: Download `best_bert_model.pt` and place it in the project root directory.
 
-**Expected Project Structure:**
+### 4.3 Execute Demo Scripts
+
+**Step 1: Run BiLSTM Demo (Best Model)**
+
+Navigate to the `bilstm_weighted` folder and launch the demo:
 
 ```
-LSTM/
-├── lstm_unweighted/
-│   ├── lstm_pipeline_unweighted.py
-│   └── model.pt
-├── lstm_weighted/
-│   ├── lstm_pipeline_weighted.py
-│   ├── demo.py                        ← Interactive demo (best model)
-│   └── model.pt
-├── lstm_simple_weighted/
-│   ├── lstm_pipeline_simple_weighted.py
-│   └── model.pt
-├── bert_pipeline.py
-├── best_bert_model.pt
-├── demo.py                            ← Interactive demo (BERT)
-└── USER_MANUAL.md
-```
-
----
-
-## 2 Running the Application
-
-### 2.1 Running the Training Pipelines
-
-Each pipeline is fully self-contained. Run from inside its folder:
-
-**Baseline Unweighted BiLSTM**
-
-```bash
-cd lstm_unweighted
-python3 lstm_pipeline_unweighted.py
-```
-
-**Weighted BiLSTM (Best Model)**
-
-```bash
-cd lstm_weighted
-python3 lstm_pipeline_weighted.py
-```
-
-**Simple Weighted LSTM**
-
-```bash
-cd lstm_simple_weighted
-python3 lstm_pipeline_simple_weighted.py
-```
-
-**BERT Fine-tuning**
-
-```bash
-python3 bert_pipeline.py
-```
-
-Each pipeline automatically saves the following outputs into its own folder:
-
-- `model.pt` — trained model weights (LSTM checkpoints also include vocabulary)
-- `loss_curves.png` — training and validation loss curves
-- `confusion_matrix.png` — test set confusion matrix
-- `test_metrics.txt` — detailed per-class classification metrics
-- `model_summary.txt` — model size, inference speed, and performance summary
-
----
-
-### 2.2 Running the Demo (Recommended)
-
-The demo scripts load a pre-trained model and allow interactive sentiment testing without re-running training.
-
-**BiLSTM Demo (Best Model)**
-
-```bash
-cd lstm_weighted
+cd bilstm_weighted
 python3 demo.py
 ```
 
-- **Requirement:** `model.pt` must exist in `lstm_weighted/`
+**Step 2: Run BERT Demo**
 
-**BERT Demo**
+From the project root directory, launch the BERT demo:
 
-```bash
+```
 python3 demo.py
 ```
 
-- **Requirement:** `best_bert_model.pt` must exist in the project root
+**Step 3: Play with the demo**
 
-Both demos will:
-
-1. Print predictions for 5 built-in sample reviews
-2. Enter an interactive mode where you can type your own review
-3. Type `quit` (or `exit` / `q`) to exit
-
----
-
-### 2.3 Expected Output (BiLSTM Demo)
-
-```
-============================================================
-  BiLSTM Sentiment Analysis — Amazon Reviews Demo
-============================================================
-  Device : mps
-  Model  : Bidirectional LSTM  (weighted / fine-tuned)
-  Weights: model.pt
-============================================================
-
-Loading model... done.
-  Vocab size       : 16,199
-  Best threshold   : 0.100
-
-────────────────────────────────────────────────────────────
-SAMPLE PREDICTIONS
-────────────────────────────────────────────────────────────
-
-[1] This software is absolutely fantastic...
-    => Prediction : Positive  (confidence: 99.95%)
-
-[2] Terrible product. It crashed my computer twice...
-    => Prediction : Negative  (confidence: 99.99%)
-
-────────────────────────────────────────────────────────────
-INTERACTIVE MODE  (type 'quit' to exit)
-────────────────────────────────────────────────────────────
-
-Enter a review: Great value for the price!
-=> Prediction : Positive  (confidence: 92.10%)
-```
-
----
-
-## 3 Hardware Acceleration
-
-All scripts automatically select the best available compute device. No manual configuration is needed.
-
-| Device | Description |
-|--------|-------------|
-| **CUDA** | NVIDIA GPU — fastest |
-| **MPS** | Apple Silicon (M1/M2/M3) — fast |
-| **CPU** | Default fallback — slower training, fully functional |
-
----
-
-## 4 Troubleshooting
-
-| Problem | Solution |
-|---------|----------|
-| `FileNotFoundError: Software_5.json.gz` | Place the dataset file in the script's folder or project root |
-| `FileNotFoundError: glove_data` | Place the `glove_data/` directory in the script's folder or project root |
-| `KeyError: 'vocab'` in BiLSTM demo | Re-run `lstm_pipeline_weighted.py` to regenerate `model.pt` |
-| `ModuleNotFoundError: transformers` | Run `pip install transformers` |
-| BERT download slow on first run | Normal — downloads ~440 MB of pre-trained weights |
+Once the script starts running, you will first see five sample reviews with predictions. You can then type your own review in the interactive mode and get a Positive / Negative prediction. Type `quit` to exit.

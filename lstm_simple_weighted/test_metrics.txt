@@ -1,15 +1,10 @@
-============================================================
-TEST METRICS
-============================================================
-Model: BiLSTM (Simple Weighted)
-Accuracy:           0.7992
-Precision:          0.8875
-Recall:             0.8174
-F1-Score:           0.8510
-Macro F1:           0.7716
-Negative Precision: 0.6380
-Negative Recall:    0.7565
-Negative F1:        0.6922
+Model: LSTM (Simple Weighted Loss)
+Dataset: /Users/barry/Desktop/LSTM/Software_5.json.gz
+pos_weight: 0.2469
+Accuracy: 0.2114
+Precision: 0.5281
+Recall: 0.5033
+F1-Score: 0.1852
 Confusion Matrix:
-[[289  93]
- [164 734]]
+[[219   3]
+ [881  18]]

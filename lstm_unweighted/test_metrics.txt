@@ -1,0 +1,9 @@
+Model: LSTM (Unweighted)
+Dataset: /Users/barry/Desktop/LSTM/Software_5.json.gz
+Accuracy: 0.8037
+Precision: 0.7150
+Recall: 0.5096
+F1-Score: 0.4671
+Confusion Matrix:
+[[  5 217]
+ [  3 896]]

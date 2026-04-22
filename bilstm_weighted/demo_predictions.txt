@@ -1,0 +1,32 @@
+Model: BiLSTM (Weighted)
+Best Threshold: 0.100
+
+Demo Predictions:
+Review 1: This software is absolutely fantastic. It solved all my problems and the interface is intuitive. Highly recommend to everyone!
+  True Label  : Positive
+  Prediction  : Positive
+  Confidence  : 99.95%
+
+Review 2: Terrible product. It crashed my computer twice and customer support was completely useless. Total waste of money.
+  True Label  : Negative
+  Prediction  : Negative
+  Confidence  : 99.99%
+
+Review 3: I wish I could give this 0 stars. Bought it hoping it would work as advertised but it does absolutely nothing it promises.
+  True Label  : Negative
+  Prediction  : Negative
+  Confidence  : 99.96%
+
+Review 4: Works exactly as described. Installation was straightforward and I haven't had a single issue in three months of daily use.
+  True Label  : Positive
+  Prediction  : Positive
+  Confidence  : 99.97%
+
+Review 5: I bought this software hoping it would solve my workflow problems. The first week seemed promising, but then the bugs started appearing. Files corrupted, autosave stopped working, and after a major update the whole application refused to launch. Completely unusable.
+  True Label  : Negative
+  Prediction  : Negative
+  Confidence  : 99.99%
+
+Summary:
+  Correct Predictions : 5 / 5
+  Average Confidence  : 99.97%

@@ -1,14 +1,9 @@
-============================================================
 MODEL SUMMARY
-============================================================
-  Model:             BiLSTM (Weighted / Improved)
+  Model:             BiLSTM (Weighted)
+  Best Threshold:    0.100
   Total Parameters:  5,695,541
   Model Size:        21.7 MB
-  Training Time:     121.8s (2.0 min)
-  Avg Inference Time (batch of 64): 14.2 ms
-  Best Threshold:    0.100
+  Training Time:     118.7s (2.0 min)
+  Avg Inference Time (batch of 64): 20.4 ms
   Test Accuracy:     0.9010
-  Test F1-Score:     0.9392
-  Macro F1:          0.8365
-  Neg Precision:     0.7846
-  Neg Recall:        0.6892
+  Test F1-Score:     0.8365

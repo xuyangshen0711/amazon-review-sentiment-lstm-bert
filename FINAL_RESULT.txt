@@ -1,7 +1,0 @@
-Test Accuracy: 0.8037
-Test Precision: 0.8050
-Test Recall: 0.9967
-Test F1-Score: 0.8907
-Confusion Matrix:
-[[  5 217]
- [  3 896]]
